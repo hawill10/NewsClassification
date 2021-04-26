@@ -236,7 +236,7 @@ def parset(file):
     return arr
 
 
-arr = process(parset('train2.csv'))
+arr = process(parset('train.csv'))
 print(arr[0:5])
 uniq = uniq(arr)
 arr = tag(arr, uniq)
