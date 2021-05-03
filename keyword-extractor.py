@@ -1,5 +1,7 @@
+import sys
 import csv
 import math
+import preprocessing
 
 # from https://gist.github.com/sebleier/554280
 stop_words = ["0o", "0s", "3a", "3b", "3d", "6b", "6o", "a", "a1", "a2", "a3", "a4", "ab", "able", "about", "above",
@@ -160,7 +162,7 @@ def tf(doc):
     return tf
 
 
-def uniq(doc):
+def unique_words(doc):
     uniq = {}
 
     for sent in doc:
@@ -225,22 +227,54 @@ def threshold(arr):
 
     return arr
 
-def parset(file):
+def parset(input_file, mode, extract):
+    answer = []
     arr = []
-    with open(file, 'r') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            row = ' '.join(row)
-            arr.append(row)
 
-    return arr
+    processed_list = preprocessing.preprocess(input_file, mode, extract)
+
+    if mode == "train":
+        for row in processed_list:
+            answer.append(row[0])
+            arr.append(row[1])
+    elif mode == "test":
+        answer = 0
+        arr = row
+
+    return answer, arr
+
+def extract_keywords(input_file, mode, extract):
+    output = []
+    answer, arr = parset(input_file, mode, extract)
+    arr = process(arr)
+    # print(arr[0:5])
+    uniq = unique_words(arr)
+    arr = tag(arr, uniq)
+    # print(arr[0:5])
+    arr = threshold(arr)
+    # print(arr[0:5])
+    if answer:
+        for line in range(len(answer)):
+            keywords = " ".join(list(arr[line].keys()))
+            output.append((answer[line], keywords))
+    else:
+        for line in range(len(arr)):
+            keywords = " ".join(list(arr[line].keys()))
+            output.append(keywords) 
+
+    return output
 
 
-arr = process(parset('train.csv'))
-print(arr[0:5])
-uniq = uniq(arr)
-arr = tag(arr, uniq)
-print(arr[0:5])
-arr = threshold(arr)
-print(arr[0:5])
+def main():
+    input_file = sys.argv[1]
+    mode = sys.argv[2]
+    extract = sys.argv[3]
+
+    output = extract_keywords(input_file, mode, extract)
+
+    for line in output:
+        print(line)
+
+if __name__ == "__main__":
+    main()
 
