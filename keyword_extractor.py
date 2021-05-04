@@ -238,8 +238,9 @@ def parset(input_file, mode, extract):
             answer.append(row[0])
             arr.append(row[1])
     elif mode == "test":
-        answer = 0
-        arr = row
+        for row in processed_list:
+            answer = 0
+            arr.append(row)
 
     return answer, arr
 

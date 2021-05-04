@@ -1,11 +1,15 @@
 import sys
-import re
+import csv
 import pandas as pd
 import numpy as np
 
 def score (keyFileName, responseFileName):
     with open(keyFileName, 'r') as keyFile:
-        key = keyFile.readlines()
+        reader = csv.reader(keyFile)
+        key = []
+        for line in reader:
+            key.append(line)
+
     with open(responseFileName, 'r') as responseFile:
         response = responseFile.readlines()
     if len(key) != len(response):
@@ -19,15 +23,15 @@ def score (keyFileName, responseFileName):
     confusion_matrix = pd.DataFrame(matrix, columns=categories, index=categories)
 
     for i in range(len(key)):
-        fields = re.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", key[i].strip())
-        ans = int(fields[0])
+        # fields = re.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", key[i].strip())
+        ans = int(key[i][0])
         res = int(response[i].strip())
         confusion_matrix.iloc[ans-1 ,res-1] += 1
         if ans == res:
             correct += 1
         else:
             incorrect += 1
-            print("answer: {}, response: {}\ntitle: {}\narticle: {}\n".format(categories[ans-1], categories[res-1], fields[1], fields[2]))
+            print("answer: {}, response: {}\ntitle: {}\narticle: {}\n".format(categories[ans-1], categories[res-1], key[i][1], key[i][2]))
 
     print("\nConfusion Matrix:")
     print(confusion_matrix)

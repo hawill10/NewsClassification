@@ -117,19 +117,22 @@ def getAverageTFIDFWordVector(tf_WordVecs, idf_WordVec):
 
 def getTFIDFWordVector(tf_WordVecs, idf_WordVec):
   # Base Dict
-  TFIDF = {}
+  # TFIDF = {}
+  TFIDFWordVecs = []
 
   # 1. Loop through the TF word vectors
   for wordvector in tf_WordVecs:
-
+    TFIDF = {}
     # 2. Calculate TFIDF for the words
     for word in idf_WordVec:
       if word in wordvector:
         TFIDF[word] = wordvector[word] * idf_WordVec[word]
       else:
         TFIDF[word] = 0
+    TFIDFWordVecs.append(TFIDF)
+    
 
-  return TFIDF
+  return TFIDFWordVecs
 
 
 
@@ -241,35 +244,36 @@ def preprocess(input_file, mode, extract):
 
   return output
 
-# TEST WITH PREPROCESSING
-input_file = sys.argv[1]
-mode = sys.argv[2]
-extract = sys.argv[3]
+if __name__ == "__main__":
+  # TEST WITH PREPROCESSING
+  input_file = sys.argv[1]
+  mode = sys.argv[2]
+  extract = sys.argv[3]
 
-input_data = preprocess(input_file, mode, extract)
+  input_data = preprocess(input_file, mode, extract)
 
-result = calculateTFIDF(input_data, mode)
+  result = calculateTFIDF(input_data, mode)
 
-# TEST OUPUT
-test_output = open('TFIDF_TEST_OUTPUT', 'w+')
+  # TEST OUPUT
+  test_output = open('TFIDF_TEST_OUTPUT', 'w+')
 
 
-if mode == 'train':
-  for categoryIndex in result:
-    for word in result[categoryIndex]:
-      test_output.write("Category: {0}  Avg. TFIDF: {2}   Word: {1}\n".format(
-        categoryIndex,
-        word,
-        result[categoryIndex][word]
-      ))
+  if mode == 'train':
+    for categoryIndex in result:
+      for word in result[categoryIndex]:
+        test_output.write("Category: {0}  Avg. TFIDF: {2}   Word: {1}\n".format(
+          categoryIndex,
+          word,
+          result[categoryIndex][word]
+        ))
 
-if mode == 'test':
-  for i, wordvector in enumerate(result):
-    for word in wordvector:
-      test_output.write("Line #: {0}  TFIDF: {2}    Word: {1}\n".format(
-        i,
-        word,
-        wordvector[word]
-      ))
+  if mode == 'test':
+    for i, wordvector in enumerate(result):
+      for word in wordvector:
+        test_output.write("Line #: {0}  TFIDF: {2}    Word: {1}\n".format(
+          i,
+          word,
+          wordvector[word]
+        ))
 
-test_output.close()
+  test_output.close()
