@@ -221,8 +221,9 @@ def tag(doc, uniq):
 
 def threshold(arr):
     for dict in arr:
+        mean = sum(dict.values()) / len(dict)
         for key in dict.copy():
-            if dict[key] < .35:
+            if dict[key] < mean:
                 del dict[key]
 
     return arr
