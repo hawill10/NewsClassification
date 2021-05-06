@@ -2,6 +2,9 @@ import sys
 import csv
 import nltk
 import string
+from nltk.stem.snowball import SnowballStemmer
+
+stemmer = SnowballStemmer("english")
 
 
 # from https://gist.github.com/sebleier/554280
@@ -154,30 +157,38 @@ def preprocess(input_file, mode, extract):
             for row in reader:
                 line = row[content_index]
                 temp_list = []
+                while "\\" in line:
+                    line = line.replace("\\", " ")
+
                 for rawToken in nltk.word_tokenize(line.lower()):
                     if rawToken not in stopwords:
                         temp_list.append(rawToken)
+
+                # run through tokens in a row
+                for i in range(len(temp_list)):
+                    # if first character of a token in a punctuation, remove it
+                    if temp_list[i][0] in string.punctuation:
+                        temp_list[i] = temp_list[i][1:]
+                    for punc in additional_punctuation:
+                        while punc in temp_list[i]:
+                            temp_list[i] = temp_list[i].replace(punc, '')
+                    
+                # remove decimals and short string
+                temp_list = [token.strip() for token in temp_list if ((not token.strip().isdecimal()) and len(token.strip()) > 2)]
+
+
+
+                # temp_list = temp_str.split(" ")
+                # while '' in temp_list:
+                #     temp_list.remove('')
+                # for word in temp_list:
+                #     if len(word) <= 2:
+                #         temp_list.remove(word)
+
+                temp_list = [stemmer.stem(token) for token in temp_list]
                 
-                temp_str = " ".join(temp_list)
+                output.append((row[0], temp_list))
 
-                # remove any punctuation
-                for punc in additional_punctuation:
-                    while punc in temp_str:
-                        temp_str = temp_str.replace(punc, '')
-
-                # # remove any numbers
-                # for char in temp_str:
-                #     if char.isdigit():
-                #         temp_str = temp_str.replace(char, '')
-
-                temp_list = temp_str.split(" ")
-                while '' in temp_list:
-                    temp_list.remove('')
-                for word in temp_list:
-                    if len(word) <= 2:
-                        temp_list.remove(word)
-                
-                output.append((row[0]," ".join(temp_list)))
     elif mode == "test":
         with open(input_file, 'r') as file:
             reader = csv.reader(file)
@@ -188,27 +199,31 @@ def preprocess(input_file, mode, extract):
                 for rawToken in nltk.word_tokenize(line.lower()):
                     if rawToken not in stopwords:
                         temp_list.append(rawToken)
-                
-                temp_str = " ".join(temp_list)
 
-                # remove any punctuation
-                for punc in list(string.punctuation) + additional_punctuation:
-                    while punc in temp_str:
-                        temp_str = temp_str.replace(punc, '')
+                # run through tokens in a row
+                for i in range(len(temp_list)):
+                    # if first character of a token in a punctuation, remove it
+                    if temp_list[i][0] in string.punctuation:
+                        temp_list[i] = temp_list[i][1:]
+                    for punc in additional_punctuation:
+                        while punc in temp_list[i]:
+                            temp_list[i] = temp_list[i].replace(punc, '')
+                    
+                # remove decimals and short string
+                temp_list = [token.strip() for token in temp_list if ((not token.strip().isdecimal()) and len(token.strip()) > 2)]
 
-                # remove any numbers
-                for char in temp_str:
-                    if char.isdigit():
-                        temp_str = temp_str.replace(char, '')
 
-                temp_list = temp_str.split(" ")
-                while '' in temp_list:
-                    temp_list.remove('')
-                for word in temp_list:
-                    if len(word) <= 2:
-                        temp_list.remove(word)
 
-                output.append(" ".join(temp_list))
+                # temp_list = temp_str.split(" ")
+                # while '' in temp_list:
+                #     temp_list.remove('')
+                # for word in temp_list:
+                #     if len(word) <= 2:
+                #         temp_list.remove(word)
+
+                temp_list = [stemmer.stem(token) for token in temp_list]
+
+                output.append(temp_list)
     else:
         print("mode should be either train or test")
         exit(0)

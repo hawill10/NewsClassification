@@ -166,18 +166,18 @@ def unique_words(doc):
     uniq = {}
 
     for sent in doc:
-        temp = " ".join(sent)
-        temp = temp.lower()
-        sent = temp.split()
+        # temp = " ".join(sent)
+        # temp = temp.lower()
+        # sent = temp.split()
 
         uniqlist = []
         [uniqlist.append(x) for x in sent if x not in uniqlist]
 
         for word in uniqlist:
-            if word.lower() in uniq:
-                uniq[word.lower()] += 1
+            if word in uniq:
+                uniq[word] += 1
             else:
-                uniq[word.lower()] = 1
+                uniq[word] = 1
     return uniq
 
 
@@ -208,6 +208,7 @@ def tfidf(tf, idf):
 
 def tag(doc, uniq):
     tagged = []
+
     vec = tfidf(tf(doc), idf(doc, uniq))
 
     for i in range(len(doc)):
@@ -249,9 +250,7 @@ def extract_keywords(input_file, mode, extract):
     output = []
     arr = parset(input_file, mode, extract)
     
-    print("before length:", len(arr))
     arr = [row for row in arr if len(row) != 0]
-    print("length:",len(arr))
 
     # arr = process(arr)
     # print(arr[0:5])
@@ -270,10 +269,10 @@ def extract_keywords(input_file, mode, extract):
 
     keywords = []
     for line in range(len(arr)):
-        keywords.append(list(arr[line].keys()))
+        for word in list(arr[line].keys()):
+            keywords.append(word)
 
-    return set(keywords)
-
+    return list(set(keywords))
 
 def main():
     input_file = sys.argv[1]
@@ -282,6 +281,8 @@ def main():
 
     output = extract_keywords(input_file, "train", extract)
     output.sort()
+
+    # print(output)
 
     w = open("keyword_list", "w")
 
