@@ -1,6 +1,7 @@
 import math
 import calculateTFIDF
 import sys
+import preprocessing
 
 # train = {
 #     1: {'a': 0.1, 'b': 0.3, 'c': 0, 'd': 0.7, 'e': 0},
@@ -52,12 +53,19 @@ if __name__ == "__main__":
     test_file = sys.argv[2]
     extract = sys.argv[3]
 
-    training_input = calculateTFIDF.preprocess(training_file, "train", extract)
-    test_input = calculateTFIDF.preprocess(test_file, "test", extract)
+    keywords = []
+    with open("keyword_list", "r") as keyword_list:
+        for word in keyword_list:
+            keywords.append(word.strip())
+
+    training_input = preprocessing.preprocess(training_file, "train", extract)
+    test_input = preprocessing.preprocess(test_file, "test", extract)
+
+    # calculateTFIDF(inputList, mode, includeWeights = False, weightVal = 1, keywords = [])
 
 
-    category_vectors = calculateTFIDF.calculateTFIDF(training_input, "train")
-    unclassified_docs = calculateTFIDF.calculateTFIDF(test_input, "test")
+    category_vectors = calculateTFIDF.calculateTFIDF(training_input, "train", True, 1.5, keywords)
+    unclassified_docs = calculateTFIDF.calculateTFIDF(test_input, "test", True, 1.5, keywords)
 
 
     output = classify(unclassified_docs, category_vectors)
