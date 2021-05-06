@@ -2,6 +2,7 @@ import sys
 import string
 import math
 import csv
+import preprocessing
 
 def insertToWordVector_IDF(tokens, wordvector):
   # Transform tokenized list to set for getting unique words
@@ -146,6 +147,7 @@ def calculateTFIDF(inputList, mode, includeWeights = False, weightVal = 1, keywo
     # Loop through the inputList to add to IDF Word Vector
     for row in inputList:
       print(row[0], row[1])
+      print(type(row[1]))
       insertToWordVector_IDF(row[1], IDF_WordVector)
       insertToTrainingTFWordVector(int(row[0]), row[1], Training_TF_WordVectors)
 
@@ -193,43 +195,13 @@ def calculateTFIDF(inputList, mode, includeWeights = False, weightVal = 1, keywo
 
 # ============================================================ #
 
-def preprocess(input_file, mode, extract):
-  if extract == "title":
-      content_index = 0
-  elif extract == "article":
-      content_index = 1
-  else:
-      print("extract should be either title or article")
-      exit(0)
-
-  output = []
-  if mode == "train":
-      content_index += 1
-      
-      with open(input_file, 'r') as file:
-          reader = csv.reader(file)
-
-          for row in reader:
-              output.append((row[0], row[content_index]))
-  elif mode == "test":
-      with open(input_file, 'r') as file:
-          reader = csv.reader(file)
-
-          for row in reader:
-              output.append(row[content_index])
-  else:
-      print("mode should be either train or test")
-      exit(0)
-
-  return output
-
 if __name__ == "__main__":
   # TEST WITH PREPROCESSING
   input_file = sys.argv[1]
   mode = sys.argv[2]
   extract = sys.argv[3]
 
-  input_data = preprocess(input_file, mode, extract)
+  input_data = preprocessing.preprocess(input_file, mode, extract)
 
   result = calculateTFIDF(input_data, mode)
 
