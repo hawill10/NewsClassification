@@ -220,11 +220,12 @@ def tag(doc, uniq):
     return tagged
 
 def threshold(arr):
-    for dict in arr:
-        mean = sum(dict.values()) / len(dict)
-        for key in dict.copy():
-            if dict[key] < mean:
-                del dict[key]
+    for dic in arr:
+        if len(dic):
+            mean = sum(dic.values()) / len(dic)
+        for key in dic.copy():
+            if dic[key] < mean:
+                del dic[key]
 
     return arr
 
@@ -232,39 +233,46 @@ def parset(input_file, mode, extract):
     answer = []
     arr = []
 
-    processed_list = preprocessing.preprocess(input_file, mode, extract)
+    processed_list = preprocessing.preprocess(input_file, "train", extract)
 
-    if mode == "train":
-        for row in processed_list:
-            answer.append(row[0])
-            arr.append(row[1])
-    elif mode == "test":
-        for row in processed_list:
-            answer = 0
-            arr.append(row)
+    # if mode == "train":
+    #     for row in processed_list:
+    #         answer.append(row[0])
+    #         arr.append(row[1])
+    # elif mode == "test":
+    for row in processed_list:
+        arr.append(row[1])
 
-    return answer, arr
+    return arr
 
 def extract_keywords(input_file, mode, extract):
     output = []
-    answer, arr = parset(input_file, mode, extract)
-    arr = process(arr)
+    arr = parset(input_file, mode, extract)
+    
+    print("before length:", len(arr))
+    arr = [row for row in arr if len(row) != 0]
+    print("length:",len(arr))
+
+    # arr = process(arr)
     # print(arr[0:5])
     uniq = unique_words(arr)
+    print("Tagging...")
     arr = tag(arr, uniq)
     # print(arr[0:5])
+    print("Filtering...")
     arr = threshold(arr)
     # print(arr[0:5])
-    if answer:
-        for line in range(len(answer)):
-            keywords = " ".join(list(arr[line].keys()))
-            output.append((answer[line], keywords))
-    else:
-        for line in range(len(arr)):
-            keywords = " ".join(list(arr[line].keys()))
-            output.append(keywords) 
+    # if answer:
+    #     for line in range(len(answer)):
+    #         keywords = " ".join(list(arr[line].keys()))
+    #         output.append((answer[line], keywords))
+    # else:
 
-    return output
+    keywords = []
+    for line in range(len(arr)):
+        keywords.append(list(arr[line].keys()))
+
+    return set(keywords)
 
 
 def main():
@@ -272,13 +280,15 @@ def main():
     mode = sys.argv[2]
     extract = sys.argv[3]
 
-    output = extract_keywords(input_file, mode, extract)
+    output = extract_keywords(input_file, "train", extract)
     output.sort()
 
     w = open("keyword_list", "w")
 
     for line in output:
         w.write(line + "\n")
+    
+    w.close()
 
 if __name__ == "__main__":
     main()

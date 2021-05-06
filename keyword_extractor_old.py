@@ -1,11 +1,10 @@
 import sys
 import csv
-import nltk
-import string
-
+import math
+import preprocessing
 
 # from https://gist.github.com/sebleier/554280
-sebleier_stop_words = ["0o", "0s", "3a", "3b", "3d", "6b", "6o", "a", "a1", "a2", "a3", "a4", "ab", "able", "about", "above",
+stop_words = ["0o", "0s", "3a", "3b", "3d", "6b", "6o", "a", "a1", "a2", "a3", "a4", "ab", "able", "about", "above",
               "abst", "ac", "accordance", "according", "accordingly", "across", "act", "actually", "ad", "added", "adj",
               "ae", "af", "affected", "affecting", "affects", "after", "afterwards", "ag", "again", "against", "ah",
               "ain", "ain't", "aj", "al", "all", "allow", "allows", "almost", "alone", "along", "already", "also",
@@ -101,137 +100,182 @@ sebleier_stop_words = ["0o", "0s", "3a", "3b", "3d", "6b", "6o", "a", "a1", "a2"
               "xx", "y", "y2", "yes", "yet", "yj", "yl", "you", "youd", "you'd", "you'll", "your", "youre", "you're",
               "yours", "yourself", "yourselves", "you've", "yr", "ys", "yt", "z", "zero", "zi", "zz"]
 
-closedClassStopWords = [
-  'a','the','an','and','or','but','about','above','after','along','amid','among',\
-  'as','at','by','for','from','in','into','like','minus','near','of','off','on',\
-  'onto','out','over','past','per','plus','since','till','to','under','until','up',\
-  'via','vs','with','that','can','cannot','could','may','might','must',\
-  'need','ought','shall','should','will','would','have','had','has','having','be',\
-  'is','am','are','was','were','being','been','get','gets','got','gotten',\
-  'getting','seem','seeming','seems','seemed',\
-  'enough', 'both', 'all', 'your' 'those', 'this', 'these', \
-  'their', 'the', 'that', 'some', 'our', 'no', 'neither', 'my',\
-  'its', 'his' 'her', 'every', 'either', 'each', 'any', 'another',\
-  'an', 'a', 'just', 'mere', 'such', 'merely' 'right', 'no', 'not',\
-  'only', 'sheer', 'even', 'especially', 'namely', 'as', 'more',\
-  'most', 'less' 'least', 'so', 'enough', 'too', 'pretty', 'quite',\
-  'rather', 'somewhat', 'sufficiently' 'same', 'different', 'such',\
-  'when', 'why', 'where', 'how', 'what', 'who', 'whom', 'which',\
-  'whether', 'why', 'whose', 'if', 'anybody', 'anyone', 'anyplace', \
-  'anything', 'anytime' 'anywhere', 'everybody', 'everyday',\
-  'everyone', 'everyplace', 'everything' 'everywhere', 'whatever',\
-  'whenever', 'whereever', 'whichever', 'whoever', 'whomever' 'he',\
-  'him', 'his', 'her', 'she', 'it', 'they', 'them', 'its', 'their','theirs',\
-  'you','your','yours','me','my','mine','I','we','us','much','and/or'
-]
 
-additional_punctuation = ["&ltem&gt", "&ltp&gt"]
+# remove unnecsary parts of each string of the query/doc
+def process(arr):
+    # punctuation to be removed
+    punctuation = ['(', ')', '?', ':', ';', ',', '.', '!', '/', '"', "'", "-", '\\', '$', '#']
 
-stopwords = set(list(nltk.corpus.stopwords.words('english')) + list(string.punctuation) + closedClassStopWords + sebleier_stop_words + additional_punctuation)
+    for i in range(0, len(arr)):
+        # split each word
+        str = arr[i].split(' ')
 
-# input_file is a file that should be read
-# mode is either train or test
-# extract is either title or article
-# Return type: test - list of string, train - list of tuple (tuple = (category string, content string))
-def preprocess(input_file, mode, extract):
-    print("Tokenizing...")
+        # remove any stop words
+        for j in str[:]:
+            if j.lower() in stop_words:
+                str.remove(j)
 
-    if extract == "title":
-        content_index = 0
-    elif extract == "article":
-        content_index = 1
-    else:
-        print("extract should be either title or article")
-        exit(0)
+        # rejoin str
+        new_str = " ".join(str)
 
-    output = []
+        # remove any punctuation
+        for k in punctuation:
+            while k in new_str:
+                new_str = new_str.replace(k, '')
+
+        # remove any numbers
+        for l in new_str:
+            if l.isdigit():
+                new_str = new_str.replace(l, '')
+
+        # remove any extra spaces
+        str = new_str.split(" ")
+        while '' in str:
+            str.remove('')
+
+        for z in str:
+            if len(z) <= 2:
+                str.remove(z)
+
+        arr[i] = str
+
+    return arr
+
+
+# function to calculate the tf scores
+def tf(doc):
+    tf = []
+    for sent in doc:
+        tf_sent = []
+
+        for word in sent:
+            c = 0
+            for k in sent:
+                if word.lower() == k.lower():
+                    c += 1
+
+            res = c / len(sent)
+            tf_sent.append(res)
+
+        tf.append(tf_sent)
+
+    return tf
+
+
+def unique_words(doc):
+    uniq = {}
+
+    for sent in doc:
+        temp = " ".join(sent)
+        temp = temp.lower()
+        sent = temp.split()
+
+        uniqlist = []
+        [uniqlist.append(x) for x in sent if x not in uniqlist]
+
+        for word in uniqlist:
+            if word.lower() in uniq:
+                uniq[word.lower()] += 1
+            else:
+                uniq[word.lower()] = 1
+    return uniq
+
+
+# function to calculate idf for every sentence in the document
+def idf(doc, uniq):
+    idf = []
+    docl = len(doc)
+
+    for sent in doc:
+        idf_sent = []
+        for word in sent:
+            score = math.log(docl / uniq[word.lower()])
+            idf_sent.append(score)
+
+        idf.append(idf_sent)
+
+    return idf
+
+
+# function to calculate the tf-idf scores.
+def tfidf(tf, idf):
+    tfidf = [[0 for j in range(len(tf[i]))] for i in range(len(tf))]
+    for i in range(len(tf)):
+        for j in range(len(tf[i])):
+            tfidf[i][j] = tf[i][j] * float(idf[i][j])
+    return tfidf
+
+
+def tag(doc, uniq):
+    tagged = []
+    vec = tfidf(tf(doc), idf(doc, uniq))
+
+    for i in range(len(doc)):
+        tempdict = {}
+        sent = doc[i]
+        for j in range(len(sent)):
+            tempdict[sent[j].lower()] = vec[i][j]
+        tagged.append(tempdict)
+
+    return tagged
+
+def threshold(arr):
+    for dict in arr:
+        for key in dict.copy():
+            if dict[key] < .35:
+                del dict[key]
+
+    return arr
+
+def parset(input_file, mode, extract):
+    answer = []
+    arr = []
+
+    processed_list = preprocessing.preprocess(input_file, mode, extract)
+
     if mode == "train":
-        content_index += 1
-        
-        with open(input_file, 'r') as file:
-            reader = csv.reader(file)
-
-            for row in reader:
-                line = row[content_index]
-                temp_list = []
-                for rawToken in nltk.word_tokenize(line.lower()):
-                    if rawToken not in stopwords:
-                        temp_list.append(rawToken)
-                
-                temp_str = " ".join(temp_list)
-
-                # remove any punctuation
-                for punc in additional_punctuation:
-                    while punc in temp_str:
-                        temp_str = temp_str.replace(punc, '')
-
-                # # remove any numbers
-                # for char in temp_str:
-                #     if char.isdigit():
-                #         temp_str = temp_str.replace(char, '')
-
-                temp_list = temp_str.split(" ")
-                while '' in temp_list:
-                    temp_list.remove('')
-                for word in temp_list:
-                    if len(word) <= 2:
-                        temp_list.remove(word)
-                
-                output.append((row[0]," ".join(temp_list)))
+        for row in processed_list:
+            answer.append(row[0])
+            arr.append(row[1])
     elif mode == "test":
-        with open(input_file, 'r') as file:
-            reader = csv.reader(file)
+        for row in processed_list:
+            answer = 0
+            arr.append(row)
 
-            for row in reader:
-                line = row[content_index]
-                temp_list = []
-                for rawToken in nltk.word_tokenize(line.lower()):
-                    if rawToken not in stopwords:
-                        temp_list.append(rawToken)
-                
-                temp_str = " ".join(temp_list)
+    return answer, arr
 
-                # remove any punctuation
-                for punc in list(string.punctuation) + additional_punctuation:
-                    while punc in temp_str:
-                        temp_str = temp_str.replace(punc, '')
-
-                # remove any numbers
-                for char in temp_str:
-                    if char.isdigit():
-                        temp_str = temp_str.replace(char, '')
-
-                temp_list = temp_str.split(" ")
-                while '' in temp_list:
-                    temp_list.remove('')
-                for word in temp_list:
-                    if len(word) <= 2:
-                        temp_list.remove(word)
-
-                output.append(" ".join(temp_list))
+def extract_keywords(input_file, mode, extract):
+    output = []
+    answer, arr = parset(input_file, mode, extract)
+    arr = process(arr)
+    # print(arr[0:5])
+    uniq = unique_words(arr)
+    arr = tag(arr, uniq)
+    # print(arr[0:5])
+    arr = threshold(arr)
+    # print(arr[0:5])
+    if answer:
+        for line in range(len(answer)):
+            keywords = " ".join(list(arr[line].keys()))
+            output.append((answer[line], keywords))
     else:
-        print("mode should be either train or test")
-        exit(0)
+        for line in range(len(arr)):
+            keywords = " ".join(list(arr[line].keys()))
+            output.append(keywords) 
 
     return output
+
 
 def main():
     input_file = sys.argv[1]
     mode = sys.argv[2]
     extract = sys.argv[3]
 
-    tokenized_data = preprocess(input_file, mode, extract)
+    output = extract_keywords(input_file, mode, extract)
 
-    for i, row in enumerate(tokenized_data):
-        for token in row:
-            if token == "" or token == " ":
-                print("{}: {}".format(i, row))
-
-    print(tokenized_data)
+    for line in output:
+        print(line)
 
 if __name__ == "__main__":
     main()
-
-
-
 
