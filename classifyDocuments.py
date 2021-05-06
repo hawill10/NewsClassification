@@ -64,8 +64,8 @@ if __name__ == "__main__":
     # calculateTFIDF(inputList, mode, includeWeights = False, weightVal = 1, keywords = [])
 
 
-    category_vectors = calculateTFIDF.calculateTFIDF(training_input, "train", True, 1.5, keywords)
-    unclassified_docs = calculateTFIDF.calculateTFIDF(test_input, "test", True, 1.5, keywords)
+    category_vectors = calculateTFIDF.calculateTFIDF(training_input, "train", True, 10, keywords)
+    unclassified_docs = calculateTFIDF.calculateTFIDF(test_input, "test", True, 10, keywords)
 
 
     output = classify(unclassified_docs, category_vectors)

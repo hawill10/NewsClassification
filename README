@@ -62,3 +62,29 @@ column=response, row=answer
 Correct: 6326
 Incorrect: 1274
 Accuracy: 0.83
+
+6. Keyword Weighting (3.0) + Text Classification (article)
+Confusion Matrix:
+          World  Sports  Business  Sci/Tech
+World      1545     174       120        61
+Sports       42    1822        18        18
+Business    146      36      1496       222
+Sci/Tech    129      69       237      1465
+column=response, row=answer
+
+Correct: 6328
+Incorrect: 1272
+Accuracy: 0.83
+
+7. Keyword Weighting (10.0) + Text Classification (article) 
+Confusion Matrix:
+          World  Sports  Business  Sci/Tech
+World      1546     174       119        61
+Sports       42    1822        18        18
+Business    146      36      1495       223
+Sci/Tech    127      71       237      1465
+column=response, row=answer
+
+Correct: 6328
+Incorrect: 1272
+Accuracy: 0.83
