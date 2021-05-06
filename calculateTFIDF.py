@@ -82,10 +82,9 @@ def insertToTestTFWordVector(line, wordVectorList):
 
   wordVectorList.append(tempTFWordVector)
 
-
 # -------------------------------------------------------
 
-def getAverageTFIDFWordVector(tf_WordVecs, idf_WordVec):
+def getAverageTFIDFWordVector(tf_WordVecs, idf_WordVec, includeWeights, weightVal, keywords):
   # Base Dict
   AverageTFIDF = {}
 
@@ -107,15 +106,20 @@ def getAverageTFIDFWordVector(tf_WordVecs, idf_WordVec):
     # 2. Calculate Average TFIDF in-place
     for word in idf_WordVec:
       if word in AverageTFIDF[categoryIndex]:
+        if includeWeights and (word in keywords):
+          TF_Sum = AverageTFIDF[categoryIndex][word] * weightVal
+        else:
+          TF_Sum = AverageTFIDF[categoryIndex][word]
+
         # Average TFIDF = [(Sum of TF) * IDF] / Size of Category Documents
-        AverageTFIDF[categoryIndex][word] = (AverageTFIDF[categoryIndex][word] * idf_WordVec[word]) / categoryDocumentSize
+        AverageTFIDF[categoryIndex][word] = (TF_Sum * idf_WordVec[word]) / categoryDocumentSize
       else:
         # If the term is not found, set to zero
         AverageTFIDF[categoryIndex][word] = 0
 
   return AverageTFIDF
 
-def getTFIDFWordVector(tf_WordVecs, idf_WordVec):
+def getTFIDFWordVector(tf_WordVecs, idf_WordVec, includeWeights, weightVal, keywords):
   # Base Dict
   # TFIDF = {}
   TFIDFWordVecs = []
@@ -126,7 +130,10 @@ def getTFIDFWordVector(tf_WordVecs, idf_WordVec):
     # 2. Calculate TFIDF for the words
     for word in idf_WordVec:
       if word in wordvector:
-        TFIDF[word] = wordvector[word] * idf_WordVec[word]
+        if includeWeights and (word in keywords):
+          TFIDF[word] = (wordvector[word] * weightVal) * idf_WordVec[word]
+        else:
+          TFIDF[word] = wordvector[word] * idf_WordVec[word]
       else:
         TFIDF[word] = 0
     TFIDFWordVecs.append(TFIDF)
@@ -139,8 +146,13 @@ def getTFIDFWordVector(tf_WordVecs, idf_WordVec):
 # -------------------------------------------------------
 
 # TFIDF Calculator Function
-def calculateTFIDF(inputList, mode):
+def calculateTFIDF(inputList, mode, includeWeights = False, weightVal = 1, keywords = []):
   """
+  Option:
+    - Include Weights using Keywords
+    - Keywords is given as a list of keywords
+    - The TF of keywords are multiplied by the weight value
+
   Training Mode Output:
     - Dict with Category Index as its key and Average TF-IDF Word Vector Dict as value
 
@@ -174,7 +186,7 @@ def calculateTFIDF(inputList, mode):
     calculateIDF(IDF_WordVector, docCount)
 
     # Calculate Average TFIDF
-    Training_TFIDF_WordVectors = getAverageTFIDFWordVector(Training_TF_WordVectors, IDF_WordVector)
+    Training_TFIDF_WordVectors = getAverageTFIDFWordVector(Training_TF_WordVectors, IDF_WordVector, includeWeights, weightVal, keywords)
 
     print("==================================")
     print("Unique Word Count in IDF Word Vec:")
@@ -200,7 +212,7 @@ def calculateTFIDF(inputList, mode):
     # Calculate IDF
     calculateIDF(IDF_WordVector, docCount)
 
-    Test_TFIDF_WordVectors = getTFIDFWordVector(Test_TF_WordVectors, IDF_WordVector)
+    Test_TFIDF_WordVectors = getTFIDFWordVector(Test_TF_WordVectors, IDF_WordVector, includeWeights, weightVal, keywords)
 
     print("==================================")
     print("Unique Word Count in IDF Word Vec:")
