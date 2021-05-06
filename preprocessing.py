@@ -125,7 +125,7 @@ closedClassStopWords = [
   'you','your','yours','me','my','mine','I','we','us','much','and/or'
 ]
 
-additional_punctuation = ["&ltem&gt", "&ltp&gt"]
+additional_punctuation = ["&ltem&gt", "&ltp&gt", "--", "``", "''", "//", "'s", "/b", "...", "..", "gt", "lt", "b"]
 
 stopwords = set(list(nltk.corpus.stopwords.words('english')) + list(string.punctuation) + closedClassStopWords + sebleier_stop_words + additional_punctuation)
 
@@ -231,7 +231,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
