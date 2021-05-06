@@ -273,9 +273,12 @@ def main():
     extract = sys.argv[3]
 
     output = extract_keywords(input_file, mode, extract)
+    output.sort()
+
+    w = open("keyword_list", "w")
 
     for line in output:
-        print(line)
+        w.write(line + "\n")
 
 if __name__ == "__main__":
     main()
